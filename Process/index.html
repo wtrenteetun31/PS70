@@ -26,17 +26,142 @@
 
 <h3><strong>Project Process (updates from Weeks 12/13): </strong> Project Process (updates from Weeks 12/13): </h3>
 <h5>Casing</h5>
-<p>I spent the majorit of the last couple of weeks focusing on integrating my project into a closer to finalized product.
+<p>I spent the majority of the last couple of weeks focusing on integrating my project into a closer to finalized product.
   This meant spending lots of time in fusion trying to include all neccessary screw holes, slots, spacing, press fits, etc into the product. I also decided to change the wallet
 sensor to be a basic pressure sensitivity using copper pads. The compartment for this can be seen to the left of my design. The photos and files below show where I am at within this integration process.
-To hold the sensor I found a preexisiting housing that I was able to tweak for my purposes to hold the sensor and allow for rotation on the top. I also spent time creating the copper tape padding for the button mechanism on the hooks to interact with. I also have designed and made the housing for the powerbank beneath the main housing.  </p>
-
-<img src=" " alt="placeholder for  image" width=100% height= 50%>
-<h5>Wiring</h5>
+To hold the sensor I found a pre-exisiting housing that I was able to tweak for my purposes to hold the sensor and allow for rotation on the top. I also spent time creating the copper tape padding for the button mechanism on the hooks to interact with. I also have designed and made the housing for the powerbank beneath the main housing.  </p>
+<br>
+<iframe src="https://college1025.autodesk360.com/shares/public/SH28cd1QT2badd0ea72b61944a7dd780a161?mode=embed" width="640" height="480" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"  frameborder="0"></iframe>
+<img src="Screenshot 2026-04-24 at 2.07.17 PM.png" alt="placeholder for  image" width=100% height= 50%>
+<h5><strong>Wiring </strong></h5>
 <p> In terms of wiring I have the basic circuitry done on a breadboard. I already know how I want it to look on the protoboard, I just have to actually soder the connections. I also have done the copper padding for the button mechanisms, and need to soder all the wiring together </p>
-<img src=" " alt="placeholder for  image" width=100% height= 50%>
-<h5> Coding</h5>
+
+<h5> <strong> Coding</strong></h5>
 <p> In terms of coding the majority of the code has stayed the same from the last updates. I will only need to add additional instances of the hook class, to finish up.</p>
+<pre><code class="cpp" style = "color:white">
+  int distanceForScan = 25;
+unsigned long previousMillis = 0;         
+int timeBeforeBuzzerEngages = 60000;
+
+class keyHook {
+  int mainPin;
+  int currentState;
+  int lastState;
+
+  public:
+  keyHook(int pinA) {
+    mainPin = pinA;
+    pinMode(mainPin, INPUT_PULLUP);       
+    lastState = digitalRead(mainPin);
+  }
+
+  bool keyOnHook() {
+    currentState = digitalRead(mainPin);  
+    if (currentState == 0) {
+      return true;
+    }
+    else {                                
+      return false;
+    }
+  }
+};                                       
+
+
+class sonicSensor {
+  int trigPin;
+  int echoPin;
+  int distance;
+  int duration;
+
+  public:
+  sonicSensor(int trigPin1, int echoPin1) {
+    trigPin = trigPin1;
+    echoPin = echoPin1;
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
+  }
+
+  int getSignalDistance() {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    duration = pulseIn(echoPin, HIGH);
+    distance = (duration * 0.0343) / 2;
+
+    Serial.print("Distance: ");
+    Serial.println(distance);
+
+    return distance;
+  }
+
+  bool personWalksBy() {
+    if (getSignalDistance() <= distanceForScan) {   
+      Serial.println("within range");
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+};                                      
+class buzzer{
+  int buzzPin;
+  bool isOn;
+
+  public:
+  buzzer (int pinb){
+    buzzPin = pinb;
+    pinMode (buzzPin, OUTPUT);
+  }
+
+  void buzz (int timeBuzzing){
+    tone (buzzPin, 500, timeBuzzing);
+    isOn = false;
+  }
+  void buzzOff (){
+    noTone(buzzPin);
+    isOn = false;
+  }
+
+};
+
+keyHook bestHook(D0);                     
+sonicSensor Sensor1(D1, D2);             
+buzzer Buzzer1(D3);
+
+Serial.println("within range");
+void setup() {
+  Serial.begin(9600);                     
+}
+
+void loop() {
+  if (bestHook.keyOnHook()) {
+    Serial.print("Key on hook: ");
+    Serial.println(bestHook.keyOnHook());           
+
+    if (Sensor1.personWalksBy()) {                  
+      Buzzer1.buzz(1000);
+    }
+    else{
+      Buzzer1.buzzOff();
+       Serial.print("buzzer turned off: ");
+    }
+  }  
+  else{
+    Buzzer1.buzzOff();
+    Serial.print("Key NOT on hook: ");
+    Serial.println(bestHook.keyOnHook());
+  } 
+
+  
+}
+</code></pre>
+
+
+
 <img src=" " alt="placeholder for  image" width=100% height= 50%>
 
 </div>
